@@ -95,7 +95,111 @@ It includes **frontend and backend integration**, **unit testing**, **logging**,
 
 ## 🧰 Installation & Setup
 
-### 1️⃣ Clone the Repository
+### Prerequisites
+- **Node.js** (LTS recommended) and **npm**
+- **MySQL** 8.x (or compatible) running locally or reachable on your network
+
+### 1️⃣ Clone the repository
 ```bash
-git clone https://github.com/yourusername/noteverse.git
-cd noteverse
+git clone https://github.com/Tech-Hammad/NoteVerse.git
+cd NoteVerse
+```
+
+### 2️⃣ Create the MySQL database
+Create an empty database (name it whatever you prefer; the example below uses `noteverse`):
+
+```sql
+CREATE DATABASE noteverse CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+The app expects **`users`** and **`notes`** tables. If you do not already have them, run something like the following in your MySQL client (adjust types if your existing schema differs):
+
+```sql
+USE noteverse;
+
+CREATE TABLE users (
+  userID INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  username VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  isAdmin TINYINT(1) NOT NULL DEFAULT 0,
+  profile_image VARCHAR(255) NULL,
+  PRIMARY KEY (userID),
+  UNIQUE KEY uq_users_email (email)
+);
+
+CREATE TABLE notes (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_id INT UNSIGNED NOT NULL,
+  title VARCHAR(500) NOT NULL,
+  note LONGTEXT NOT NULL,
+  pinned TINYINT(1) NOT NULL DEFAULT 0,
+  secured TINYINT(1) NOT NULL DEFAULT 0,
+  password VARCHAR(255) NULL,
+  archived TINYINT(1) NOT NULL DEFAULT 0,
+  tags JSON NULL,
+  PRIMARY KEY (id),
+  KEY idx_notes_user_id (user_id),
+  CONSTRAINT fk_notes_user FOREIGN KEY (user_id) REFERENCES users (userID) ON DELETE CASCADE
+);
+```
+
+### 3️⃣ Backend environment variables
+In the **`backend`** folder, create a **`.env`** file (never commit real secrets):
+
+```env
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASS=your_mysql_password
+DB_NAME=noteverse
+JWT_SECRET=use_a_long_random_secret_string
+```
+
+- **`PORT`**: defaults to `5000` if omitted.
+- **`JWT_SECRET`**: required for signing login tokens.
+
+### 4️⃣ Install and run the backend
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+The API listens on **`http://localhost:5000`** (or your configured `PORT`).
+
+### 5️⃣ Install and run the frontend
+Open a **second** terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The UI is served by Vite at **`http://localhost:5173`**.
+
+**Note:** The frontend calls the API at **`http://localhost:5000`** in several places. Keep the backend on port **5000**, or update those URLs to match your backend.
+
+### 6️⃣ Uploads folder
+File uploads are stored under **`backend/uploads/`**. Ensure that directory exists and is writable when you run the backend (it is ignored by Git).
+
+### 7️⃣ Tests (optional)
+From the **backend** folder:
+```bash
+npm test
+```
+
+From the **frontend** folder:
+```bash
+npm test
+```
+
+### 8️⃣ Production build (frontend only)
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+`preview` serves the production build locally for a quick check.
